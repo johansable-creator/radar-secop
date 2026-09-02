@@ -52,7 +52,12 @@ function dedupeAndTransform(raw) {
     frec: r.fecha_de_recepcion_de ? r.fecha_de_recepcion_de.slice(0, 10) : null,
     url: (r.urlproceso && r.urlproceso.url) || "",
     tipo: r.tipo_de_contrato || ""
-  }));
+  }))
+    // SECOP hasn't generated a public notice yet for processes still in draft/pending
+    // internal approval (or cancelled before publishing one) — their urlproceso just
+    // points at the generic login page instead of the actual process, so drop them
+    // rather than list a link that goes nowhere useful.
+    .filter((r) => !r.url.includes("STS/Users/Login"));
   out.sort(
     (a, b) =>
       (a.frec || "9999").localeCompare(b.frec || "9999") ||
