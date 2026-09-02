@@ -51,13 +51,14 @@ function dedupeAndTransform(raw) {
     fpub: r.fecha_de_publicacion_del ? r.fecha_de_publicacion_del.slice(0, 10) : null,
     frec: r.fecha_de_recepcion_de ? r.fecha_de_recepcion_de.slice(0, 10) : null,
     url: (r.urlproceso && r.urlproceso.url) || "",
-    tipo: r.tipo_de_contrato || ""
-  }))
+    tipo: r.tipo_de_contrato || "",
     // SECOP hasn't generated a public notice yet for processes still in draft/pending
     // internal approval (or cancelled before publishing one) — their urlproceso just
-    // points at the generic login page instead of the actual process, so drop them
-    // rather than list a link that goes nowhere useful.
-    .filter((r) => !r.url.includes("STS/Users/Login"));
+    // points at the generic login page instead of the actual process. Keep the row
+    // (the deadline can still be real and close) but flag it so the site shows it
+    // without a working link, instead of either hiding it or linking nowhere.
+    pending: ((r.urlproceso && r.urlproceso.url) || "").includes("STS/Users/Login")
+  }));
   out.sort(
     (a, b) =>
       (a.frec || "9999").localeCompare(b.frec || "9999") ||

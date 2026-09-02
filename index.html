@@ -253,6 +253,8 @@
     transition: border-color 0.12s ease, background 0.12s ease;
   }
   .card:hover { border-color: var(--border-strong); background: var(--surface-2); }
+  .card-pending { cursor: default; border-style: dashed; }
+  .card-pending:hover { border-color: var(--border); background: var(--surface); }
 
   .card-main { min-width: 0; }
   .card-entity {
@@ -272,6 +274,16 @@
     font-weight: 600;
     background: var(--accent);
     color: var(--accent-ink);
+    border-radius: 4px;
+    padding: 1px 5px;
+    letter-spacing: 0.04em;
+  }
+  .pending-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--soon-soft);
+    color: var(--soon);
     border-radius: 4px;
     padding: 1px 5px;
     letter-spacing: 0.04em;
@@ -337,6 +349,7 @@
     color: var(--accent);
     font-weight: 600;
   }
+  .card-go-pending { color: var(--ink-muted); font-weight: 500; }
 
   .empty {
     text-align: center;

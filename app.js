@@ -110,23 +110,32 @@ function render() {
       const isNew = !isFirstVisit && !seenIds.has(r.id);
       const priceClass = r.precio === 0 ? "card-price zero" : "card-price";
       const priceText = r.precio === 0 ? "sin cuantía" : fmtCOPCompact(r.precio);
-      return '<a class="card" href="' + escapeAttr(r.url) + '" target="_blank" rel="noopener">' +
+      const tag = r.pending ? "div" : "a";
+      const hrefAttr = r.pending ? "" : ' href="' + escapeAttr(r.url) + '" target="_blank" rel="noopener"';
+      const cardClass = r.pending ? "card card-pending" : "card";
+      return '<' + tag + ' class="' + cardClass + '"' + hrefAttr + '>' +
         '<div class="card-main">' +
-          '<div class="card-entity">' + escapeHtml(r.ent) + (isNew ? ' <span class="new-badge">NUEVO</span>' : '') + '</div>' +
+          '<div class="card-entity">' + escapeHtml(r.ent) +
+            (isNew ? ' <span class="new-badge">NUEVO</span>' : '') +
+            (r.pending ? ' <span class="pending-badge">SIN PUBLICAR AÚN</span>' : '') +
+          '</div>' +
           '<div class="card-title">' + escapeHtml(r.nom) + '</div>' +
           '<div class="card-desc">' + escapeHtml(r.desc) + '</div>' +
           '<div class="card-tags">' +
             '<span class="tag">' + escapeHtml(r.mod) + '</span>' +
             '<span class="tag">' + escapeHtml(r.ciu) + ', ' + escapeHtml(r.dep) + '</span>' +
             (r.fpub ? '<span class="tag">publicó ' + fmtDate(r.fpub) + '</span>' : '') +
+            (r.pending ? '<span class="tag">estado: ' + escapeHtml(r.estado) + '</span>' : '') +
           '</div>' +
         '</div>' +
         '<div class="card-side">' +
           '<div class="' + priceClass + '">' + priceText + '</div>' +
           '<div class="deadline-chip ' + chipClass + '">' + chipLabel + '</div>' +
-          '<div class="card-go">Ver proceso &rarr;</div>' +
+          (r.pending
+            ? '<div class="card-go card-go-pending">Aún sin aviso público</div>'
+            : '<div class="card-go">Ver proceso &rarr;</div>') +
         '</div>' +
-      '</a>';
+      '</' + tag + '>';
     }).join("");
   }
 
