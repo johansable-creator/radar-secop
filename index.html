@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Radar SECOP</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="Procesos de contratación abiertos en toda Colombia, filtrados por departamento, municipio, modalidad y rango de precio." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #EBEDE7;
+    --surface: #F7F8F4;
+    --surface-2: #FFFFFF;
+    --ink: #1B221D;
+    --ink-muted: #5C6A5F;
+    --border: #D3D7CB;
+    --border-strong: #B9C0AE;
+    --accent: #1F5C4A;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #DCEAE3;
+    --urgent: #A9382A;
+    --urgent-soft: #F6DDD6;
+    --soon: #8C6110;
+    --soon-soft: #F3E6C8;
+    --fine: #3C6E52;
+    --fine-soft: #DCEAE0;
+    --shadow: 0 1px 2px rgba(27,34,29,0.06), 0 6px 16px rgba(27,34,29,0.06);
+    --font-display: "Fraunces", "Iowan Old Style", ui-serif, Georgia, serif;
+    --font-body: "Public Sans", -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12160F;
+      --surface: #181D19;
+      --surface-2: #1E2521;
+      --ink: #E7EAE3;
+      --ink-muted: #97A498;
+      --border: #2C342D;
+      --border-strong: #3A453B;
+      --accent: #55B592;
+      --accent-ink: #0A130F;
+      --accent-soft: #1E332A;
+      --urgent: #E28572;
+      --urgent-soft: #3B2019;
+      --soon: #DCB25F;
+      --soon-soft: #392C15;
+      --fine: #79C29E;
+      --fine-soft: #1C2E23;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.35);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  ::selection { background: var(--accent-soft); }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 28px 20px 64px;
+  }
+
+  header.masthead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 20px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border-strong);
+    margin-bottom: 22px;
+  }
+  .masthead-title {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 28px;
+    margin: 2px 0 0;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  .masthead-meta {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    text-align: right;
+    line-height: 1.6;
+  }
+  .masthead-meta a { color: var(--ink-muted); text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 2px; }
+  .masthead-meta a:hover { color: var(--accent); }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .stat-value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+  .stat-value.urgent { color: var(--urgent); }
+  .stat-label {
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-top: 4px;
+  }
+
+  .filters {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--bg);
+    padding: 12px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    align-items: end;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+    font-weight: 600;
+  }
+  input[type="search"], select {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  input[type="search"] { width: 240px; }
+  #dep, #mun { width: 180px; }
+  .price-tag {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    width: 24px;
+    flex: 0 0 auto;
+  }
+  input[type="search"]:focus, select:focus, input[type="range"]:focus-visible, button:focus-visible, a.card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .price-field { min-width: 260px; flex: 1 1 260px; }
+  .price-row { display: flex; align-items: center; gap: 10px; }
+  input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+    height: 4px;
+  }
+  .price-value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 78px;
+    text-align: right;
+  }
+  .price-presets { display: flex; gap: 6px; margin-top: 2px; }
+  .preset-btn, .toggle-btn {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    color: var(--ink-muted);
+    border-radius: 6px;
+    padding: 3px 8px;
+    cursor: pointer;
+  }
+  .preset-btn.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .toggle-btn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+
+  .mod-field { flex: 1 1 100%; }
+  .mod-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .mod-chip .chip-count { opacity: 0.6; margin-left: 3px; }
+  .mod-clear {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    background: none;
+    border: none;
+    color: var(--ink-muted);
+    text-decoration: underline;
+    text-decoration-color: var(--border-strong);
+    text-underline-offset: 2px;
+    cursor: pointer;
+    padding: 3px 2px;
+  }
+  .mod-clear:hover { color: var(--urgent); }
+
+  .result-count {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    margin: 10px 0 12px;
+  }
+  .result-count strong { color: var(--ink); font-family: var(--font-mono); }
+
+  .list { display: flex; flex-direction: column; gap: 8px; }
+
+  .card {
+    display: block;
+    text-decoration: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 13px 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 16px;
+    transition: border-color 0.12s ease, background 0.12s ease;
+  }
+  .card:hover { border-color: var(--border-strong); background: var(--surface-2); }
+
+  .card-main { min-width: 0; }
+  .card-entity {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .new-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-radius: 4px;
+    padding: 1px 5px;
+    letter-spacing: 0.04em;
+  }
+  .card-title {
+    font-size: 14.5px;
+    font-weight: 600;
+    margin: 3px 0 2px;
+    color: var(--ink);
+  }
+  .card-desc {
+    font-size: 13px;
+    color: var(--ink-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 7px;
+  }
+  .tag {
+    font-size: 11px;
+    color: var(--ink-muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 8px;
+  }
+
+  .card-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    text-align: right;
+    gap: 6px;
+    min-width: 128px;
+  }
+  .card-price {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 15.5px;
+    font-weight: 600;
+  }
+  .card-price.zero { color: var(--ink-muted); font-weight: 500; font-size: 12.5px; }
+  .deadline-chip {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 2px 9px;
+    white-space: nowrap;
+  }
+  .deadline-chip.urgent { background: var(--urgent-soft); color: var(--urgent); }
+  .deadline-chip.soon { background: var(--soon-soft); color: var(--soon); }
+  .deadline-chip.fine { background: var(--fine-soft); color: var(--fine); }
+  .card-go {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--ink-muted);
+    font-size: 14px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 10px;
+  }
+
+  footer {
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--ink-muted);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  footer a { color: var(--ink-muted); }
+
+  @media (max-width: 720px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .card { grid-template-columns: 1fr; }
+    .card-side { flex-direction: row; align-items: center; text-align: left; }
+    input[type="search"] { width: 100%; }
+    .filters { position: static; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="masthead-title">
+      <div>
+        <div class="eyebrow">SECOP II &middot; Colombia</div>
+        <h1>Radar de procesos</h1>
+      </div>
+    </div>
+    <div class="masthead-meta">
+      Datos actualizados: <span id="updated-at">cargando&hellip;</span><br>
+      Fuente: <a href="https://www.datos.gov.co/Econom-a-y-Finanzas/SECOP-II-Procesos-de-Contrataci-n/p6dx-8zbt" target="_blank" rel="noopener">datos.gov.co</a> &middot; se actualiza sola cada hora
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value" id="stat-total">&nbsp;</div>
+      <div class="stat-label">procesos abiertos</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value urgent" id="stat-today">&nbsp;</div>
+      <div class="stat-label">cierran hoy o mañana</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="stat-week">&nbsp;</div>
+      <div class="stat-label">cierran en 7 días</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="stat-value">&nbsp;</div>
+      <div class="stat-label">valor total en rango</div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="field">
+      <label for="search">Buscar</label>
+      <input type="search" id="search" placeholder="entidad, objeto, ciudad&hellip;" />
+    </div>
+    <div class="field">
+      <label for="dep">Departamento</label>
+      <select id="dep"><option value="">Todos los departamentos</option></select>
+    </div>
+    <div class="field">
+      <label for="mun">Municipio</label>
+      <select id="mun"><option value="">Todos los municipios</option></select>
+    </div>
+    <div class="field price-field">
+      <label>Precio base</label>
+      <div class="price-row">
+        <span class="price-tag">m&iacute;n</span>
+        <input type="range" id="price-min" min="0" max="1500000000" step="10000000" value="0" />
+        <span class="price-value" id="price-min-value"></span>
+      </div>
+      <div class="price-row">
+        <span class="price-tag">m&aacute;x</span>
+        <input type="range" id="price" min="0" max="1500000000" step="10000000" value="500000000" />
+        <span class="price-value" id="price-value"></span>
+      </div>
+      <div class="price-presets">
+        <button class="preset-btn" data-preset="500000000">$500M</button>
+        <button class="preset-btn" data-preset="1000000000">$1.000M</button>
+        <button class="preset-btn active" data-preset="1500000000">$1.500M</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="sort">Ordenar</label>
+      <select id="sort">
+        <option value="deadline">Cierra pronto</option>
+        <option value="price-desc">Precio: mayor a menor</option>
+        <option value="price-asc">Precio: menor a mayor</option>
+        <option value="published">Publicado reciente</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>&nbsp;</label>
+      <button class="toggle-btn" id="hide-rfi" aria-pressed="false">Ocultar solicitudes de info. ($0)</button>
+    </div>
+    <div class="field mod-field">
+      <label>Modalidad</label>
+      <div class="mod-chips" id="mod-chips"></div>
+    </div>
+  </div>
+
+  <div class="result-count" id="result-count">Cargando datos&hellip;</div>
+  <div class="list" id="list"></div>
+  <div class="empty" id="empty" hidden>Ning&uacute;n proceso coincide con el filtro actual.</div>
+
+  <footer>
+    <span>Cobertura: todo el pa&iacute;s &middot; solo procesos que a&uacute;n reciben ofertas</span>
+    <span id="new-since"></span>
+  </footer>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
