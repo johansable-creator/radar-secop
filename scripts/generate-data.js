@@ -16,6 +16,10 @@ function todayUTC() {
   return new Date().toISOString().slice(0, 10) + "T00:00:00";
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function fetchRaw() {
   const where = encodeURIComponent(
     `precio_base<=1500000000 AND fecha_de_recepcion_de >= '${todayUTC()}'`
@@ -23,9 +27,28 @@ async function fetchRaw() {
   const url =
     `https://www.datos.gov.co/resource/p6dx-8zbt.json?$select=${FIELDS}` +
     `&$where=${where}&$order=fecha_de_recepcion_de ASC&$limit=5000`;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!res.ok) throw new Error(`SECOP API returned ${res.status}`);
-  return res.json();
+
+  // datos.gov.co occasionally returns a transient 5xx (e.g. 503) — retry a few
+  // times with backoff before giving up, so a single blip doesn't fail the
+  // hourly job and leave the site showing stale data until the next run.
+  const maxAttempts = 6;
+  let lastErr;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      if (res.ok) return res.json();
+      lastErr = new Error(`SECOP API returned ${res.status}`);
+      if (res.status < 500) throw lastErr; // don't retry on a real client error
+    } catch (e) {
+      lastErr = e;
+    }
+    if (attempt < maxAttempts) {
+      const delayMs = 10000 * attempt; // 10s, 20s, 30s, 40s, 50s (~2.5min total)
+      console.log(`Intento ${attempt} falló (${lastErr.message}), reintentando en ${delayMs / 1000}s...`);
+      await sleep(delayMs);
+    }
+  }
+  throw lastErr;
 }
 
 function dedupeAndTransform(raw) {
