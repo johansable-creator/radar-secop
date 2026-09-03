@@ -79,7 +79,7 @@ function render() {
   let rows = baseFilter();
   if (q) {
     rows = rows.filter(r =>
-      (r.ent + " " + r.nom + " " + r.desc + " " + r.ciu + " " + r.dep + " " + r.mod).toLowerCase().includes(q)
+      (r.ent + " " + r.nom + " " + r.desc + " " + r.ciu + " " + r.dep + " " + r.mod + " " + r.ref).toLowerCase().includes(q)
     );
   }
 
@@ -120,6 +120,7 @@ function render() {
             (r.pending ? ' <span class="pending-badge">SIN PUBLICAR AÚN</span>' : '') +
           '</div>' +
           '<div class="card-title">' + escapeHtml(r.nom) + '</div>' +
+          (r.ref ? '<div class="card-ref">N&ordm; ' + escapeHtml(r.ref) + '</div>' : '') +
           '<div class="card-desc">' + escapeHtml(r.desc) + '</div>' +
           '<div class="card-tags">' +
             '<span class="tag">' + escapeHtml(r.mod) + '</span>' +

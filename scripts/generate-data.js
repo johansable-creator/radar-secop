@@ -6,7 +6,7 @@ const fs = require("fs");
 const path = require("path");
 
 const FIELDS = [
-  "id_del_proceso", "entidad", "departamento_entidad", "ciudad_entidad",
+  "id_del_proceso", "referencia_del_proceso", "entidad", "departamento_entidad", "ciudad_entidad",
   "nombre_del_procedimiento", "descripci_n_del_procedimiento",
   "modalidad_de_contratacion", "precio_base", "estado_del_procedimiento",
   "fecha_de_publicacion_del", "fecha_de_recepcion_de", "urlproceso", "tipo_de_contrato"
@@ -40,6 +40,7 @@ function dedupeAndTransform(raw) {
   }
   const out = [...byId.values()].map((r) => ({
     id: r.id_del_proceso,
+    ref: r.referencia_del_proceso || "",
     ent: r.entidad,
     dep: r.departamento_entidad || "No definido",
     ciu: r.ciudad_entidad || "No definido",
