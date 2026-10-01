@@ -51,6 +51,26 @@ async function fetchRaw() {
   throw lastErr;
 }
 
+// The open-data mirror (this dataset) is NOT a live feed of the SECOP II platform —
+// Colombia Compra Eficiente syncs it on its own schedule (observed ~once/day, not
+// hourly), so a process can already show "Publicado" with a real closing date on
+// secop.gov.co itself while this dataset still has it as "Borrador" with no public
+// link. `rowsUpdatedAt` on the dataset's own view metadata tells us when that last
+// sync happened, so the site can be honest about how stale the underlying source is
+// instead of implying "hourly" means "live". Best-effort: if this call fails, the
+// site just omits that line rather than failing the whole refresh over it.
+async function fetchSourceUpdatedAt() {
+  try {
+    const res = await fetch("https://www.datos.gov.co/api/views/p6dx-8zbt.json");
+    if (!res.ok) return null;
+    const meta = await res.json();
+    if (!meta.rowsUpdatedAt) return null;
+    return new Date(meta.rowsUpdatedAt * 1000).toISOString();
+  } catch (e) {
+    return null;
+  }
+}
+
 function dedupeAndTransform(raw) {
   // The dataset carries one row per snapshot as a process moves through phases
   // (draft -> published -> evaluation, ...). Keep only the most recent snapshot per id.
@@ -94,13 +114,16 @@ function dedupeAndTransform(raw) {
 (async () => {
   const raw = await fetchRaw();
   const rows = dedupeAndTransform(raw);
+  const sourceUpdatedAt = await fetchSourceUpdatedAt();
   const payload = {
     generatedAt: new Date().toISOString(),
+    sourceUpdatedAt,
     rows
   };
   const outPath = path.join(__dirname, "..", "data.json");
   fs.writeFileSync(outPath, JSON.stringify(payload));
   console.log(`Wrote ${rows.length} unique processes to ${outPath}`);
+  console.log(`SECOP source last synced: ${sourceUpdatedAt || "unknown"}`);
 })().catch((err) => {
   console.error(err);
   process.exit(1);

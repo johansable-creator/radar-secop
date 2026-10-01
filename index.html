@@ -113,6 +113,9 @@
   }
   .masthead-meta a { color: var(--ink-muted); text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 2px; }
   .masthead-meta a:hover { color: var(--accent); }
+  #source-updated-at.fresh { color: var(--fine); font-weight: 600; }
+  #source-updated-at.stale { color: var(--soon); font-weight: 600; }
+  #source-updated-at.very-stale { color: var(--urgent); font-weight: 600; }
 
   .stats {
     display: grid;
@@ -403,8 +406,9 @@
       </div>
     </div>
     <div class="masthead-meta">
-      Datos actualizados: <span id="updated-at">cargando&hellip;</span><br>
-      Fuente: <a href="https://www.datos.gov.co/Econom-a-y-Finanzas/SECOP-II-Procesos-de-Contrataci-n/p6dx-8zbt" target="_blank" rel="noopener">datos.gov.co</a> &middot; se actualiza sola cada hora
+      Este sitio se actualizó: <span id="updated-at">cargando&hellip;</span><br>
+      SECOP sincronizó sus datos: <span id="source-updated-at">cargando&hellip;</span><br>
+      Fuente: <a href="https://www.datos.gov.co/Econom-a-y-Finanzas/SECOP-II-Procesos-de-Contrataci-n/p6dx-8zbt" target="_blank" rel="noopener">datos.gov.co</a>
     </div>
   </header>
 

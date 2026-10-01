@@ -27,6 +27,15 @@ function fmtDate(d) {
   const dt = new Date(d + "T00:00:00");
   return dt.toLocaleDateString("es-CO", { day: "2-digit", month: "short" });
 }
+function fmtRelative(iso) {
+  if (!iso) return null;
+  const ms = Date.now() - new Date(iso).getTime();
+  const hours = ms / 3600000;
+  if (hours < 1) return "hace " + Math.max(1, Math.round(ms / 60000)) + " min";
+  if (hours < 48) return "hace " + Math.round(hours) + " h";
+  return "hace " + Math.round(hours / 24) + " días";
+}
+
 function daysUntil(d) {
   if (!d) return null;
   const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -275,11 +284,22 @@ async function init() {
   }
   DATA = payload.rows || [];
   GENERATED_AT = payload.generatedAt || null;
+  const SOURCE_UPDATED_AT = payload.sourceUpdatedAt || null;
   isFirstVisit = seenIds.size === 0;
 
   document.getElementById("updated-at").textContent = GENERATED_AT
-    ? new Date(GENERATED_AT).toLocaleString("es-CO", { dateStyle: "medium", timeStyle: "short" })
+    ? new Date(GENERATED_AT).toLocaleString("es-CO", { dateStyle: "medium", timeStyle: "short" }) + " (" + fmtRelative(GENERATED_AT) + ")"
     : "desconocido";
+
+  const srcEl = document.getElementById("source-updated-at");
+  if (SOURCE_UPDATED_AT) {
+    const hoursStale = (Date.now() - new Date(SOURCE_UPDATED_AT).getTime()) / 3600000;
+    srcEl.textContent = fmtRelative(SOURCE_UPDATED_AT);
+    srcEl.title = new Date(SOURCE_UPDATED_AT).toLocaleString("es-CO", { dateStyle: "medium", timeStyle: "short" });
+    srcEl.classList.add(hoursStale <= 6 ? "fresh" : hoursStale <= 30 ? "stale" : "very-stale");
+  } else {
+    srcEl.textContent = "desconocido";
+  }
   if (!isFirstVisit) {
     const newCount = DATA.filter(r => !seenIds.has(r.id)).length;
     if (newCount > 0) document.getElementById("new-since").textContent =
